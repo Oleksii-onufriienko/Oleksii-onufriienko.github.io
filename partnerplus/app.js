@@ -210,7 +210,7 @@
     year: now.getFullYear(), month: now.getMonth() + 1, umonth: now.getMonth() + 1,
   };
   function renderSide() {
-    $('#brandSub').textContent = t('Prototyp 0.5', 'Прототип 0.5');
+    $('#brandSub').textContent = t('Prototyp 0.5.1', 'Прототип 0.5.1');
     $('#lang').innerHTML = `<button data-lang="de" class="${lang === 'de' ? 'on' : ''}" data-tip="Немецкий">DE</button><button data-lang="ru" class="${lang === 'ru' ? 'on' : ''}" data-tip="Russisch">RU</button>`;
     $('#theme').innerHTML = `<button data-theme-set="light" class="${theme === 'light' ? 'on' : ''}"${tipA('Hell', 'Светлая')}>☀ ${esc(t('Hell', 'Светлая'))}</button><button data-theme-set="dark" class="${theme === 'dark' ? 'on' : ''}"${tipA('Dunkel', 'Тёмная')}>☾ ${esc(t('Dunkel', 'Тёмная'))}</button>`;
     $('#sideFoot').textContent = api.mode === 'web' ? (window.PP_PWA ? t('Daten nur auf diesem Gerät', 'Данные только на этом устройстве') : t('Browser-Vorschau · Beispieldaten', 'Онлайн-превью · примеры')) : t('Daten: ', 'Данные: ') + info.dbPath;
