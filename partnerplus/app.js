@@ -40,6 +40,7 @@
       const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
       let x = r.left, y = r.bottom + 6;
       if (el.closest('nav')) { x = r.right + 8; y = r.top + (r.height - h) / 2; }
+      const cm = el.closest('#cellmenu'); if (cm) { const mr = cm.getBoundingClientRect(); x = mr.right + 8 + w > innerWidth - 8 ? mr.left - w - 8 : mr.right + 8; y = r.top + (r.height - h) / 2; }
       x = Math.max(8, Math.min(x, innerWidth - w - 8)); if (y + h > innerHeight - 8) y = r.top - h - 6;
       tip.style.left = x + 'px'; tip.style.top = y + 'px';
       requestAnimationFrame(() => tip.classList.add('in'));
@@ -320,8 +321,8 @@
     }
     return rows;
   }
-  function contactRow(c) {
-    return `<tr data-id="${c.id}">${COLS.map(col => {
+  function contactRow(c, i) {
+    return `<tr data-id="${c.id}"><td class="nr">${i + 1}</td>${COLS.map(col => {
       const v = c[col.f];
       if (col.t === 'x') return `<td class="c">${xBtn(col.f, v)}</td>`;
       if (col.t === 'sel') return `<td>${dots(c.selektion || '', true)}</td>`;
@@ -351,11 +352,11 @@
         ${f.chips.size || f.colors.size || f.ref || f.q ? `<button class="btn small" id="reset">${L('Filter zurücksetzen', 'Сбросить фильтры')}</button>` : ''}
         <span class="count">${lang === 'ru' ? `<b>${rows.length}</b> из ${state.contacts.length} контактов` : `<b>${rows.length}</b> von ${state.contacts.length} Kontakten`}</span>
       </div>
-      <div class="tablewrap"><table class="grid" id="ct"><thead><tr>
+      <div class="tablewrap"><table class="grid" id="ct"><thead><tr><th class="nr">#</th>
         ${COLS.map(col => `<th class="sortable ${col.t === 'x' ? 'c' : ''}" data-sort="${col.f}">${colHead(col)}${f.sort === col.f ? (f.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th></th>
       </tr></thead><tbody>
-        ${f.example ? `<tr class="example">${COLS.map((col, i) => `<td class="${col.t === 'x' ? 'c' : ''}${i === 0 ? ' lbl' : ''}">${i === 0 ? `<span class="tag">${L('Beispiel', 'Образец')}</span>` : ''}${col.ex === 'dots' ? dots('RBGO', false) : esc(col.ex)}</td>`).join('')}<td></td></tr>` : ''}
-        ${rows.map(contactRow).join('') || `<tr><td colspan="${COLS.length + 1}" style="padding:24px;text-align:center" class="muted">${esc(t('Keine Kontakte für diesen Filter.', 'Нет контактов по этому фильтру.'))}</td></tr>`}
+        ${f.example ? `<tr class="example"><td class="nr"></td>${COLS.map((col, i) => `<td class="${col.t === 'x' ? 'c' : ''}${i === 0 ? ' lbl' : ''}">${i === 0 ? `<span class="tag">${L('Beispiel', 'Образец')}</span>` : ''}${col.ex === 'dots' ? dots('RBGO', false) : esc(col.ex)}</td>`).join('')}<td></td></tr>` : ''}
+        ${rows.map(contactRow).join('') || `<tr><td colspan="${COLS.length + 2}" style="padding:24px;text-align:center" class="muted">${esc(t('Keine Kontakte für diesen Filter.', 'Нет контактов по этому фильтру.'))}</td></tr>`}
       </tbody></table></div>
       <datalist id="refs">${state.contacts.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist>
       ${legend()}
@@ -431,13 +432,13 @@
     $('#main').innerHTML = `
       ${head('Kundenbestand', 'Клиентская база', 'Alle Kontakte mit Kreuz bei „Kunde“. Grün = Vertrag vorhanden. Die letzte Zeile zeigt Lücken im Bestand.', 'Все контакты с отметкой «Клиент». Зелёный = договор есть. Нижняя строка показывает пробелы.')}
       <div class="tablewrap"><table class="grid kb"><thead>
-        <tr><th rowspan="2" style="min-width:170px">${L('Name, Vorname', 'Фамилия, имя')}</th><th rowspan="2">${L('VM Name', 'Консультант')}</th>
+        <tr><th rowspan="2" class="nr">#</th><th rowspan="2" style="min-width:170px">${L('Name, Vorname', 'Фамилия, имя')}</th><th rowspan="2">${L('VM Name', 'Консультант')}</th>
           ${groups.map(g => `<th class="grp" colspan="${g.items.length}">${L(g.group, g.ru || g.group)}</th>`).join('')}
           <th class="grp" colspan="3">${L('Service', 'Сервис')}</th><th class="grp" colspan="3">${L('Empfehlungen', 'Рекомендации')}</th></tr>
         <tr>${groups.map(g => g.items.map((p, i) => `<th class="v ${i === 0 ? 'g0' : ''}">${p}</th>`).join('')).join('')}
           <th class="g0">${L('Letzter', 'Последний')}</th><th>${L('Nächster', 'Следующий')}</th><th>${L('Grund', 'Причина')}</th><th class="v g0">${L('Kunden', 'Клиенты')}</th><th class="v">${L('Partner', 'Партнёры')}</th><th class="v">VIP</th></tr>
       </thead><tbody>
-        ${kunden.map(k => `<tr data-id="${k.id}"><td><b>${esc(k.name)}</b></td>
+        ${kunden.map((k, i) => `<tr data-id="${k.id}"><td class="nr">${i + 1}</td><td><b>${esc(k.name)}</b></td>
           <td><input class="cell" data-k="vm_name" value="${esc(k.vm_name)}" style="width:100px"></td>
           ${groups.map(g => g.items.map((p, i) => `<td class="p ${i === 0 ? 'g0' : ''}"><button class="pc ${k.products.includes(p) ? 'on' : ''}" data-p="${esc(p)}" aria-label="${esc(p)}"></button></td>`).join('')).join('')}
           <td class="g0"><input class="cell" type="date" data-k="letzter" value="${esc(k.letzter)}"></td>
@@ -445,7 +446,7 @@
           <td><input class="cell" data-k="grund" value="${esc(k.grund)}" style="width:120px"></td>
           ${['empf_kunden', 'empf_partner', 'empf_vip'].map((fl, i) => `<td class="${i === 0 ? 'g0' : ''}"><input class="cell num" data-k="${fl}" value="${k[fl] || 0}" style="width:38px"></td>`).join('')}
         </tr>`).join('') || `<tr><td colspan="40" class="muted" style="padding:24px;text-align:center">${esc(t('Noch keine Kunden. In Kontakt-Potenzial bei „Kunde“ ankreuzen.', 'Клиентов пока нет. Отметьте «Клиент» в потенциале контактов.'))}</td></tr>`}
-      </tbody><tfoot><tr><td>${esc(t(`Abdeckung (${n} Kunden)`, `Покрытие (${n} клиентов)`))}</td><td></td>
+      </tbody><tfoot><tr><td></td><td>${esc(t(`Abdeckung (${n} Kunden)`, `Покрытие (${n} клиентов)`))}</td><td></td>
         ${cov.map((v, i) => `<td class="p ${groups.some(g => g.items[0] === products[i]) ? 'g0' : ''}"><div class="cov" style="${shade(v)}" data-tip="${esc(lang === 'ru' ? `${products[i]}: ${v} из ${n} клиентов (${n ? Math.round(v / n * 100) : 0} %)` : `${products[i]}: ${v} von ${n} Kunden (${n ? Math.round(v / n * 100) : 0} %)`)}">${v}</div></td>`).join('')}
         <td colspan="6"></td></tr></tfoot></table></div>
       <p class="muted" style="margin-top:8px">${esc(t('Tipp: Spalten mit hellen Zahlen unten sind Lücken – gute Liste für Service-Gespräche.', 'Совет: светлые цифры внизу означают пробелы. Это хороший список для сервисных встреч.'))}</p>`;
@@ -481,13 +482,13 @@
         <span class="count">${esc(lang === 'ru' ? `${g.length} гостей · ${sum('bis')} на BIS · ${sum('efs')} на EFS · ${sum('kunde_geworden')} стали клиентами` : `${g.length} Gäste · ${sum('bis')} im BIS · ${sum('efs')} im EFS · ${sum('kunde_geworden')} Kunde geworden`)}</span>
       </div>
       <datalist id="allc">${state.contacts.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist>
-      <div class="tablewrap"><table class="grid"><thead><tr><th>${L('Name, Vorname', 'Фамилия, имя')}</th><th>${L('Datum zum', 'Дата')}</th>
+      <div class="tablewrap"><table class="grid"><thead><tr><th class="nr">#</th><th>${L('Name, Vorname', 'Фамилия, имя')}</th><th>${L('Datum zum', 'Дата')}</th>
         ${GCOLS.map(c => `<th class="c">${L(c.de, c.ru)}</th>`).join('')}<th>${L('Empfehlungen (Anzahl)', 'Рекомендации (кол-во)')}</th><th class="c">${L('VIP Kunde', 'VIP-клиент')}</th><th>${L('Tel.Nr.', 'Телефон')}</th><th></th></tr></thead>
-      <tbody>${g.map(r => `<tr data-id="${r.id}"><td><b>${esc(r.name)}</b></td>
+      <tbody>${g.map((r, i) => `<tr data-id="${r.id}"><td class="nr">${i + 1}</td><td><b>${esc(r.name)}</b></td>
         <td><input class="cell" type="date" data-g="datum" value="${esc(r.datum)}"></td>
         ${GCOLS.map(c => `<td class="c">${xBtn(c.f, r[c.f])}</td>`).join('')}
         <td><input class="cell num" data-g="empfehlungen" value="${r.empfehlungen || 0}" style="width:60px"></td>
-        <td class="c">${xBtn('vip_kunde', r.vip_kunde)}</td><td class="muted">${esc(r.telefon)}</td><td>${delBtn('data-delg')}</td></tr>`).join('') || `<tr><td colspan="14" class="muted" style="padding:24px;text-align:center">${esc(t('Noch keine Gäste.', 'Гостей пока нет.'))}</td></tr>`}
+        <td class="c">${xBtn('vip_kunde', r.vip_kunde)}</td><td class="muted">${esc(r.telefon)}</td><td>${delBtn('data-delg')}</td></tr>`).join('') || `<tr><td colspan="15" class="muted" style="padding:24px;text-align:center">${esc(t('Noch keine Gäste.', 'Гостей пока нет.'))}</td></tr>`}
       </tbody></table></div>
       <p class="muted" style="margin-top:8px">${esc(t('Ein Gast ist gleichzeitig ein Kontakt: neue Namen erscheinen automatisch im Kontakt-Potenzial, BIS/EFS/Kunde werden dort mit angekreuzt.', 'Гость одновременно является контактом: новые имена сами появляются в потенциале контактов, а BIS/EFS/Клиент отмечаются и там.'))}</p>`;
     $('#gAdd').onclick = async () => {
@@ -527,8 +528,8 @@
       <div class="toolbar"><b>${esc(mon(mo - 1))} ${y}:</b> ${list.length} ${esc(t('von', 'из'))} <input class="inp" id="ziel" value="${ziel}" style="width:50px;text-align:right"> ${esc(t('Kontakten geplant', 'контактов запланировано'))}
         <div class="progress" data-tip="${list.length} / ${ziel}"><div style="width:${Math.min(100, list.length / ziel * 100)}%"></div></div>
         <span class="count">${esc(lang === 'ru' ? `Позвонили ${list.filter(r => r.angerufen).length} · Встреча ${list.filter(r => r.termin).length} · FFG проведено ${done}` : `Angerufen ${list.filter(r => r.angerufen).length} · Termin ${list.filter(r => r.termin).length} · FFG geführt ${done}`)}</span></div>
-      <div class="tablewrap"><table class="grid"><thead><tr><th>#</th><th>${L('Name, Vorname', 'Фамилия, имя')}</th><th>${L('Selektion', 'Селекция')}</th><th>${L('Telefon', 'Телефон')}</th><th class="c">${L('Angerufen', 'Позвонили')}</th><th class="c">${L('Termin', 'Встреча')}</th><th class="c">${L('FFG geführt', 'FFG проведено')}</th><th>${L('Notiz', 'Заметка')}</th><th></th></tr></thead>
-      <tbody>${list.map((r, i) => `<tr data-id="${r.id}"><td class="muted" style="padding-left:8px">${i + 1}</td><td><b>${esc(r.name)}</b></td><td>${dots(r.selektion || '', false)}</td><td>${esc(r.telefon)}</td>
+      <div class="tablewrap"><table class="grid"><thead><tr><th class="nr">#</th><th>${L('Name, Vorname', 'Фамилия, имя')}</th><th>${L('Selektion', 'Селекция')}</th><th>${L('Telefon', 'Телефон')}</th><th class="c">${L('Angerufen', 'Позвонили')}</th><th class="c">${L('Termin', 'Встреча')}</th><th class="c">${L('FFG geführt', 'FFG проведено')}</th><th>${L('Notiz', 'Заметка')}</th><th></th></tr></thead>
+      <tbody>${list.map((r, i) => `<tr data-id="${r.id}"><td class="nr">${i + 1}</td><td><b>${esc(r.name)}</b></td><td>${dots(r.selektion || '', false)}</td><td>${esc(r.telefon)}</td>
         ${['angerufen', 'termin', 'ffg_done'].map(fl => `<td class="c">${xBtn(fl, r[fl])}</td>`).join('')}
         <td><input class="cell" data-n="notiz" value="${esc(r.notiz)}" style="min-width:220px"></td><td>${delBtn('data-delf')}</td></tr>`).join('') || `<tr><td colspan="9" class="muted" style="padding:24px;text-align:center">${esc(t('Für diesen Monat noch keine Kontakte ausgewählt.', 'На этот месяц контакты ещё не выбраны.'))}</td></tr>`}
       </tbody></table></div>`;
