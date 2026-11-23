@@ -300,10 +300,10 @@
     const selektion = SELEKTION.map(s => ({ key: s.key, label: s.label, ru: s.ru, color: s.color, value: cnt(x => (x.selektion || '').includes(s.key)) }));
     const ohneSel = cnt(x => !x.selektion);
 
-    const ums = this.all('SELECT month, SUM(policiert) AS pol, SUM(pot) AS pot, COUNT(*) AS n FROM umsatz WHERE year=? GROUP BY month', [year]);
+    const ums = this.all('SELECT month, SUM(policiert) AS pol, SUM(pot) AS pot, COUNT(*) AS n, SUM(CASE WHEN policiert > 0 THEN 1 ELSE 0 END) AS npol, SUM(CASE WHEN pot > 0 THEN 1 ELSE 0 END) AS npot FROM umsatz WHERE year=? GROUP BY month', [year]);
     const umsatz = Array.from({ length: 12 }, (_, i) => {
       const r = ums.find(u => u.month === i + 1) || {};
-      return { month: i + 1, policiert: r.pol || 0, pot: r.pot || 0 };
+      return { month: i + 1, policiert: r.pol || 0, pot: r.pot || 0, npol: r.npol || 0, npot: r.npot || 0 };
     });
     const ffgRows = this.all('SELECT month, COUNT(*) AS geplant, SUM(angerufen) AS angerufen, SUM(termin) AS termin, SUM(ffg_done) AS done FROM ffg_plan WHERE year=? GROUP BY month', [year]);
     const ffg = Array.from({ length: 12 }, (_, i) => {

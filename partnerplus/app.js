@@ -210,7 +210,7 @@
     year: now.getFullYear(), month: now.getMonth() + 1, umonth: now.getMonth() + 1,
   };
   function renderSide() {
-    $('#brandSub').textContent = t('Prototyp 0.5.2', 'Прототип 0.5.2');
+    $('#brandSub').textContent = t('Prototyp 0.5.3', 'Прототип 0.5.3');
     $('#lang').innerHTML = `<button data-lang="de" class="${lang === 'de' ? 'on' : ''}" data-tip="Немецкий">DE</button><button data-lang="ru" class="${lang === 'ru' ? 'on' : ''}" data-tip="Russisch">RU</button>`;
     $('#theme').innerHTML = `<button data-theme-set="light" class="${theme === 'light' ? 'on' : ''}"${tipA('Hell', 'Светлая')}>☀ ${esc(t('Hell', 'Светлая'))}</button><button data-theme-set="dark" class="${theme === 'dark' ? 'on' : ''}"${tipA('Dunkel', 'Тёмная')}>☾ ${esc(t('Dunkel', 'Тёмная'))}</button>`;
     $('#sideFoot').textContent = api.mode === 'web' ? (window.PP_PWA ? t('Daten nur auf diesem Gerät', 'Данные только на этом устройстве') : t('Browser-Vorschau · Beispieldaten', 'Онлайн-превью · примеры')) : t('Daten: ', 'Данные: ') + info.dbPath;
@@ -574,9 +574,9 @@
   const fmt = v => (Math.round((v || 0) * 100) / 100).toLocaleString(lang === 'ru' ? 'ru-RU' : 'de-DE');
   function monthChart(data, series, curMonth) {
     const max = Math.max(1, ...data.flatMap(d => series.map(s => d[s.key])));
-    return `<div class="series-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${L(s.de, s.ru)}</span>`).join('')}${series.some(s => s.cnt) ? `<span class="muted">${esc(t('Über den Balken: Anzahl Verträge / KE (Karriereeinheiten)', 'Над столбиками: кол-во сделок / KE (Karriereeinheiten)'))}</span>` : ''}</div>
-      <div class="vchart">${data.map((d, i) => `<div class="col ${i + 1 === curMonth ? 'cur' : ''}" data-tip="${esc(`${mon(i)}: ${series.map(s => s.cnt ? `${t(s.de, s.ru)}: ${d[s.cnt]} ${t('Verträge', 'сделок')} / ${fmt(d[s.key])} KE` : `${t(s.de, s.ru)} ${fmt(d[s.key])}`).join(' · ')}`)}">${series.map(s => s.cnt ? `<div class="bw"><span class="bl"><span>${d[s.cnt]}/</span><span>${fmt(d[s.key])}</span></span><div class="b" style="height:calc((100% - var(--blh)) * ${d[s.key] / max});background:${s.color}"></div></div>` : `<div class="b" style="height:${d[s.key] / max * 100}%;background:${s.color}"></div>`).join('')}</div>`).join('')}</div>
-      <div class="vlabels">${MON().map(m => `<span>${m}</span>`).join('')}</div>`;
+    return `<div class="mchart"><div class="series-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${L(s.de, s.ru)}</span>`).join('')}${series.some(s => s.cnt) ? `<span class="muted">${esc(t('Über den Balken: Anzahl Kunden / KE (Karriereeinheiten)', 'Над столбиками: кол-во клиентов / KE (Karriereeinheiten)'))}</span>` : series.some(s => s.num) ? `<span class="muted">${esc(t('Über den Balken: Anzahl Kunden', 'Над столбиками: кол-во клиентов'))}</span>` : ''}</div>
+      <div class="vchart">${data.map((d, i) => `<div class="col ${i + 1 === curMonth ? 'cur' : ''}" data-tip="${esc(`${mon(i)}: ${series.map(s => s.cnt ? `${t(s.de, s.ru)}: ${d[s.cnt]} ${t('Kunden', 'клиентов')} / ${fmt(d[s.key])} KE` : `${t(s.de, s.ru)} ${fmt(d[s.key])}`).join(' · ')}`)}">${series.map(s => s.cnt || s.num ? `<div class="bw"><span class="bl">${s.cnt ? `<span>${d[s.cnt]}/</span><span>${fmt(d[s.key])}</span>` : `<span>${fmt(d[s.key])}</span>`}</span><div class="b" style="height:calc((100% - var(--blh)) * ${d[s.key] / max});background:${s.color}"></div></div>` : `<div class="b" style="height:${d[s.key] / max * 100}%;background:${s.color}"></div>`).join('')}</div>`).join('')}</div>
+      <div class="vlabels">${MON().map(m => `<span>${m}</span>`).join('')}</div></div>`;
   }
   async function viewUmsatz() {
     const y = state.year, mo = state.umonth;
@@ -840,9 +840,10 @@
           <div class="hbar"><span class="muted">${L('ohne Selektion', 'без селекции')}</span><div class="track"><div class="fill" style="width:${s.ohneSel / Math.max(1, s.total) * 100}%;background:#b9b8b2"></div></div><span class="val">${s.ohneSel}</span></div></div>
         <div class="panel"><h3>${L('Top-Empfehlungsgeber', 'Кто больше всех рекомендует')} <small>${esc(t('Klick zeigt die Kontakte', 'клик покажет контакты'))}</small></h3>
           <div class="reflist">${s.referrer.slice(0, 8).map(r => `<a data-ref="${esc(r.name)}">${esc(r.name)}</a><span>${r.value}</span>`).join('') || `<span class="muted">${esc(t('Noch keine Empfehlungen.', 'Рекомендаций пока нет.'))}</span>`}</div></div>
-        <div class="panel"><h3>${L('Umsatz', 'Оборот')} ${state.year}</h3>${monthChart(s.umsatz, [{ key: 'policiert', de: 'Policiert', ru: 'Оформлено', color: 'var(--s1)' }, { key: 'pot', de: 'Potenzial', ru: 'Потенциал', color: 'var(--s2)' }], curM)}</div>
-        <div class="panel"><h3>${L('Potenzial FFG', 'Потенциал FFG')} ${state.year}</h3>${monthChart(s.ffg, [{ key: 'geplant', de: 'Geplant', ru: 'Запланировано', color: 'var(--s2)' }, { key: 'done', de: 'FFG geführt', ru: 'FFG проведено', color: 'var(--s1)' }], curM)}</div>
-        <div class="panel"><h3>${L('Kundenbestand: größte Lücken', 'Клиентская база: самые большие пробелы')} <small>${esc(t('Kunden mit Vertrag', 'клиенты с договором'))}</small></h3>
+        <div class="panel"><h3>${L('Umsatz', 'Оборот')} ${state.year}</h3>${monthChart(s.umsatz, [{ key: 'policiert', cnt: 'npol', de: 'Policiert', ru: 'Оформлено', color: 'var(--s1)' }, { key: 'pot', cnt: 'npot', de: 'Potenzial', ru: 'Потенциал', color: 'var(--s2)' }], curM)}</div>
+        <div class="panel"><h3>${L('Potenzial FFG', 'Потенциал FFG')} ${state.year}</h3>${monthChart(s.ffg, [{ key: 'geplant', num: true, de: 'Geplant', ru: 'Запланировано', color: 'var(--s2)' }, { key: 'done', num: true, de: 'FFG geführt', ru: 'FFG проведено', color: 'var(--s1)' }], curM)}</div>
+        <div class="panel"><h3>${L('Kundenbestand: größte Lücken', 'Клиентская база: самые большие пробелы')} </h3>
+          <div class="hbar hhead"><span>${L('Produkt', 'Продукт')}</span><span class="val">${L('Kunden mit Vertrag / Kunden gesamt', 'клиентов с договором / всего клиентов')}</span></div>
           ${coverShow.map(p => `<div class="hbar"><span>${esc(p.product)}</span><div class="track"><div class="fill" style="width:${p.value / Math.max(1, s.kundenCount) * 100}%"></div></div><span class="val">${p.value} / ${s.kundenCount}</span></div>`).join('')}</div>
       </div>`;
     bindYear(viewAuswertung);
