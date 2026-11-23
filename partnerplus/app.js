@@ -210,7 +210,7 @@
     year: now.getFullYear(), month: now.getMonth() + 1, umonth: now.getMonth() + 1,
   };
   function renderSide() {
-    $('#brandSub').textContent = t('Prototyp 0.5.1', 'Прототип 0.5.1');
+    $('#brandSub').textContent = t('Prototyp 0.5.2', 'Прототип 0.5.2');
     $('#lang').innerHTML = `<button data-lang="de" class="${lang === 'de' ? 'on' : ''}" data-tip="Немецкий">DE</button><button data-lang="ru" class="${lang === 'ru' ? 'on' : ''}" data-tip="Russisch">RU</button>`;
     $('#theme').innerHTML = `<button data-theme-set="light" class="${theme === 'light' ? 'on' : ''}"${tipA('Hell', 'Светлая')}>☀ ${esc(t('Hell', 'Светлая'))}</button><button data-theme-set="dark" class="${theme === 'dark' ? 'on' : ''}"${tipA('Dunkel', 'Тёмная')}>☾ ${esc(t('Dunkel', 'Тёмная'))}</button>`;
     $('#sideFoot').textContent = api.mode === 'web' ? (window.PP_PWA ? t('Daten nur auf diesem Gerät', 'Данные только на этом устройстве') : t('Browser-Vorschau · Beispieldaten', 'Онлайн-превью · примеры')) : t('Daten: ', 'Данные: ') + info.dbPath;
@@ -574,20 +574,20 @@
   const fmt = v => (Math.round((v || 0) * 100) / 100).toLocaleString(lang === 'ru' ? 'ru-RU' : 'de-DE');
   function monthChart(data, series, curMonth) {
     const max = Math.max(1, ...data.flatMap(d => series.map(s => d[s.key])));
-    return `<div class="series-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${L(s.de, s.ru)}</span>`).join('')}</div>
-      <div class="vchart">${data.map((d, i) => `<div class="col ${i + 1 === curMonth ? 'cur' : ''}" data-tip="${esc(`${mon(i)}: ${series.map(s => `${t(s.de, s.ru)} ${fmt(d[s.key])}`).join(' · ')}`)}">${series.map(s => `<div class="b" style="height:${d[s.key] / max * 100}%;background:${s.color}"></div>`).join('')}</div>`).join('')}</div>
+    return `<div class="series-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${L(s.de, s.ru)}</span>`).join('')}${series.some(s => s.cnt) ? `<span class="muted">${esc(t('Über den Balken: Anzahl Verträge / KE (Karriereeinheiten)', 'Над столбиками: кол-во сделок / KE (Karriereeinheiten)'))}</span>` : ''}</div>
+      <div class="vchart">${data.map((d, i) => `<div class="col ${i + 1 === curMonth ? 'cur' : ''}" data-tip="${esc(`${mon(i)}: ${series.map(s => s.cnt ? `${t(s.de, s.ru)}: ${d[s.cnt]} ${t('Verträge', 'сделок')} / ${fmt(d[s.key])} KE` : `${t(s.de, s.ru)} ${fmt(d[s.key])}`).join(' · ')}`)}">${series.map(s => s.cnt ? `<div class="bw"><span class="bl"><span>${d[s.cnt]}/</span><span>${fmt(d[s.key])}</span></span><div class="b" style="height:calc((100% - var(--blh)) * ${d[s.key] / max});background:${s.color}"></div></div>` : `<div class="b" style="height:${d[s.key] / max * 100}%;background:${s.color}"></div>`).join('')}</div>`).join('')}</div>
       <div class="vlabels">${MON().map(m => `<span>${m}</span>`).join('')}</div>`;
   }
   async function viewUmsatz() {
     const y = state.year, mo = state.umonth;
     const all = await call('listUmsatz', y);
     const st = await call('getSettings');
-    const data = MONTHS_DE.map((_, i) => { const r = all.filter(u => u.month === i + 1); return { policiert: r.reduce((a, b) => a + (b.policiert || 0), 0), pot: r.reduce((a, b) => a + (b.pot || 0), 0) }; });
+    const data = MONTHS_DE.map((_, i) => { const r = all.filter(u => u.month === i + 1); return { policiert: r.reduce((a, b) => a + (b.policiert || 0), 0), pot: r.reduce((a, b) => a + (b.pot || 0), 0), npol: r.filter(b => b.policiert > 0).length, npot: r.filter(b => b.pot > 0).length }; });
     const rows = all.filter(u => u.month === mo);
     const sp = data[mo - 1].policiert, spot = data[mo - 1].pot;
     const stufe = parseFloat(st.provisionsstufe) || 0, ausz = parseFloat(st.auszahlung) || 0;
     const yearPol = data.reduce((a, b) => a + b.policiert, 0), yearPot = data.reduce((a, b) => a + b.pot, 0);
-    const SER = [{ key: 'policiert', de: 'Policiert', ru: 'Оформлено', color: 'var(--s1)' }, { key: 'pot', de: 'Potenzial', ru: 'Потенциал', color: 'var(--s2)' }];
+    const SER = [{ key: 'policiert', cnt: 'npol', de: 'Policiert', ru: 'Оформлено', color: 'var(--s1)' }, { key: 'pot', cnt: 'npot', de: 'Potenzial', ru: 'Потенциал', color: 'var(--s2)' }];
     $('#main').innerHTML = `
       ${head('Umsatzplanung', 'Планирование оборота', 'Pro Monat: Kunde, policierte Einheiten und Potenzial. Das Jahr auf einen Blick oben.', 'По месяцам: клиент, оформленные единицы (Einheiten) и потенциал. Весь год — на графике сверху.', yearSel())}
       <div class="cards">
@@ -598,14 +598,14 @@
       <div class="panel" style="margin-bottom:12px">${monthChart(data, SER, y === now.getFullYear() ? now.getMonth() + 1 : 0)}</div>
       <div class="tabs">${MONTHS_DE.map((_, i) => `<button class="${i + 1 === mo ? 'on' : ''}" data-m="${i + 1}"${tipA(MONTHS_DE[i], MONTHS_RU[i])}>${esc(mon(i))}</button>`).join('')}</div>
       <div class="umsgrid" style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start">
-        <div class="tablewrap"><table class="grid" style="min-width:0"><thead><tr><th>${L('Kunde', 'Клиент')}</th><th style="text-align:right">${L('Policiert', 'Оформлено')}</th><th style="text-align:right">${L('Pot.', 'Потенциал')}</th><th></th></tr></thead>
-          <tbody>${rows.map(u => `<tr data-id="${u.id}"><td><input class="cell" data-u="kunde" value="${esc(u.kunde)}" list="allc"></td><td><input class="cell num" data-u="policiert" value="${u.policiert || ''}"></td><td><input class="cell num" data-u="pot" value="${u.pot || ''}"></td><td>${delBtn('data-delu')}</td></tr>`).join('')}</tbody>
-          <tfoot><tr><td><button class="btn small" id="uAdd">+ ${L('Zeile', 'Строка')}</button> &nbsp;${esc(t('Summe', 'Итого'))} ${esc(mon(mo - 1))}</td><td style="text-align:right">${fmt(sp)}</td><td style="text-align:right">${fmt(spot)}</td><td></td></tr></tfoot></table></div>
+        <div class="tablewrap"><table class="grid" style="min-width:0"><thead><tr><th class="nr">#</th><th>${L('Kunde', 'Клиент')}</th><th style="text-align:right">${L('Policiert, KE', 'Оформлено, KE')}</th><th style="text-align:right">${L('Pot., KE', 'Потенциал, KE')}</th><th></th></tr></thead>
+          <tbody>${rows.map((u, i) => `<tr data-id="${u.id}"><td class="nr">${i + 1}</td><td><input class="cell" data-u="kunde" value="${esc(u.kunde)}" list="allc"></td><td><input class="cell num" data-u="policiert" value="${u.policiert || ''}"></td><td><input class="cell num" data-u="pot" value="${u.pot || ''}"></td><td>${delBtn('data-delu')}</td></tr>`).join('')}</tbody>
+          <tfoot><tr><td></td><td><button class="btn small" id="uAdd">+ ${L('Zeile', 'Строка')}</button> &nbsp;${esc(t('Summe', 'Итого'))} ${esc(mon(mo - 1))}</td><td style="text-align:right">${fmt(sp)}</td><td style="text-align:right">${fmt(spot)}</td><td></td></tr></tfoot></table></div>
         <div class="panel"><h3>${L('Abrechnung', 'Расчёт')} ${esc(mon(mo - 1))}</h3>
           <div class="kv"><label>${L('Provisionsstufe', 'Ступень провизии')}</label><input class="inp" data-s="provisionsstufe" value="${esc(st.provisionsstufe)}">
             <label>${L('Auszahlung %', 'Выплата %')}</label><input class="inp" data-s="auszahlung" value="${esc(st.auszahlung)}">
-            <span>${L('Gesamt policiert', 'Всего оформлено')}</span><span class="res">${fmt(sp)}</span>
-            <span>${L('Provision', 'Провизия')}</span><span class="res">${fmt(sp * stufe * ausz / 100)} €</span></div>
+            <span>${L('Gesamt policiert, KE', 'Всего оформлено, KE')}</span><span class="res">${fmt(sp)}</span>
+            <span>${L('Provision, €', 'Провизия, €')}</span><span class="res">${fmt(sp * stufe * ausz / 100)} €</span></div>
           <p class="muted" style="font-size:11px;margin-bottom:0">${esc(t('Formel wie im Excel: Policiert × Stufe × Auszahlung % / 100. Erfolgsprovision, Leistungszuschuss, KLB, Dynamik folgen nach Abstimmung.', 'Формула как в Excel: оформлено × ступень × выплата % / 100. Erfolgsprovision, Leistungszuschuss, KLB, Dynamik добавим после согласования.'))}</p></div>
       </div>
       <datalist id="allc">${state.contacts.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist>`;

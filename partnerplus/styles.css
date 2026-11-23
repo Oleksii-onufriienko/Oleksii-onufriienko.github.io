@@ -117,12 +117,15 @@ span.dot { cursor: default; display: inline-block; }
 .hbar .track { height: 16px; background: var(--surface-2); border-radius: 0 4px 4px 0; overflow: hidden; }
 .hbar .fill { height: 100%; background: var(--s1); border-radius: 0 4px 4px 0; min-width: 2px; }
 .hbar .val { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.vchart { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-items: end; height: 150px; padding-top: 8px; border-bottom: 1px solid var(--line-2); }
+.vchart { --blh: 15px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; align-items: end; height: 150px; padding-top: 8px; border-bottom: 1px solid var(--line-2); }
 .vchart .col { display: flex; gap: 2px; align-items: flex-end; justify-content: center; height: 100%; cursor: default; }
 .vchart .b { width: 40%; max-width: 16px; border-radius: 4px 4px 0 0; min-height: 2px; }
 .vchart .col.cur .b { outline: 2px solid var(--ink-3); outline-offset: 1px; }
 .vlabels { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; font-size: 11px; color: var(--ink-3); text-align: center; margin-top: 4px; }
 .vchart .col:hover .b { filter: brightness(1.12); }
+.vchart .bw { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.vchart .bw .b { width: 100%; max-width: 16px; }
+.vchart .bl { font-size: 9px; line-height: 13px; height: 13px; margin-bottom: 2px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.2px; }
 .series-legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
 .series-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 .hints { margin: 0; padding-left: 18px; }
@@ -246,4 +249,11 @@ nav a[data-tip] { position: relative; }
   .side, .toolbar, .btn { display: none !important; }
   #app { display: block; }
   main { overflow: visible; }
+}
+
+/* Schmale Fenster (iPad hochkant): Umsatz-Tabelle und Abrechnung untereinander, Balkenbeschriftung zweizeilig */
+@media (max-width: 1100px) {
+  .umsgrid { grid-template-columns: minmax(0, 1fr) !important; }
+  .vchart { --blh: 26px; }
+  .vchart .bl { display: flex; flex-direction: column; align-items: center; height: auto; line-height: 12px; }
 }
